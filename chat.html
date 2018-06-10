@@ -1,0 +1,107 @@
+<html>
+<head><title></title>
+<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="http://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+<script>
+
+var connection;
+</script>
+</head>
+<body>
+
+
+<form>
+IP Address: <input id="chatServerIP" type="text" value=""/><div id="connectionStatusText" style="color: green;"></div><br>
+Name: <input id="userName" type="text"/>
+<br><br>
+<input id="connectionButton" type="button" value="connect to chat" onclick="connectToScanner();"/> <input id="disconnectButton" type="button" value="disconnect" onclick="disconnectFromDLScanner();"/>
+<br><br><br>
+
+
+<div id="messageBoard">
+
+</div>
+<br>
+<br>
+<form id="chatInputform" action="#">
+<input id="inputMessage" type="text" style="width:400px;"> <input id="sendButton" type="submit" value="Send"/>
+<br>
+</form>
+
+<script>
+
+
+function sendMessage() {
+	var message = $('#inputMessage').val();
+	message = $('#userName').val()+ '~' + message;
+	connection.send(message);
+	
+	$('#inputMessage').val('');
+}
+
+function disconnectFromDLScanner(){
+	//alert('Closing connection to server.');
+	connection.close(1000,"closing normally.");
+	//connection.close();
+	//alert('disconnected.');
+}
+
+function connectToScanner() {
+	
+	var ipadress = $('#chatServerIP').val();
+	connection = new WebSocket('ws://' + ipadress + ':5353');
+
+	// When the connection is open, send some data to the server
+	connection.onopen = function () {
+	  //alert('connection started');
+	  $('#connectionStatusText').text('Connected');
+	  $('#userName').attr('disabled',true);
+	  $('#chatServerIP').attr('disabled',true);
+	  $('#connectionButton').attr('disabled', 'disabled');
+	  $('#disconnectButton').removeAttr('disabled');
+	};
+
+	// Log errors
+	connection.onerror = function (error) {
+	  alert('WebSocket Error: ' + error.data);
+	};
+	
+	connection.onclose = function( evt ) {
+		//alert('on close called: ' + evt.code + ", reason: "  + evt.reason + ", evt.wasClean: " + evt.wasClean);
+		$('#connectionStatusText').text('');
+		$('#userName').attr('disabled',false);
+		$('#chatServerIP').attr('disabled',false);
+		$('#connectionButton').removeAttr('disabled');
+		$('#disconnectButton').attr('disabled', 'disabled');
+	};
+
+	// Log messages from the server
+	connection.onmessage = function (e) {
+		//alert('got message');
+		var combination = e.data.split('~');
+		var message = '<b>' + combination[0] +':</b> ' + combination[1] + '<br>';
+		$('#messageBoard').append(message);
+	};
+}
+
+
+$( document ).ready(function() {
+  
+  if( typeof(WebSocket) != "function" ) {
+	alert("websockets not supported by this browser!");
+	$("#connectionButton").hide();
+  }
+  
+    // make chat input form to not submit
+	$('#sendButton').click(function(event){
+		event.preventDefault();
+		sendMessage();
+	});
+	
+	$('#disconnectButton').attr('disabled', 'disabled');
+});
+
+
+</script>
+</body>
+</html>
