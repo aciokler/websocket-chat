@@ -1,0 +1,3 @@
+This is a java implementation of the websocket standard: https://tools.ietf.org/html/rfc6455
+
+It the basic features implemented, but it's not complete.
